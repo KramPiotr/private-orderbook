@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.8;
+pragma solidity >=0.8.24;
 
 import {euint256} from "@fhenixprotocol/contracts/FHE.sol";
 /**
@@ -8,6 +8,7 @@ import {euint256} from "@fhenixprotocol/contracts/FHE.sol";
 interface IOrderBook {
     struct Order {
         euint256 orderId,
-        euint256 qty
+        euint256 qty,
+        euint256 price
     }
 }

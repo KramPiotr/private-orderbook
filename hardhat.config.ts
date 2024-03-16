@@ -1,39 +1,54 @@
-require("dotenv").config({ path: './.env.dev' });
-import { HardhatUserConfig } from 'hardhat/config';
-import '@nomiclabs/hardhat-waffle';
-import '@nomiclabs/hardhat-ethers';
-import 'hardhat-typechain';
-import 'hardhat-deploy';
-import '@nomiclabs/hardhat-etherscan';
+// Plugins
+// Tasks
+import "./tasks";
+import "@nomicfoundation/hardhat-toolbox";
+import {config as dotenvConfig} from "dotenv";
+import "fhenix-hardhat-docker";
+import "fhenix-hardhat-plugin";
+import "hardhat-deploy";
+import {HardhatUserConfig} from "hardhat/config";
+import {resolve} from "path";
 
-// You have to export an object to set up your config
-// This object can have the following optional entries:
-// defaultNetwork, networks, solc, and paths.
-// Go to https://buidler.dev/config/ to learn more
+// DOTENV_CONFIG_PATH is used to specify the path to the .env file for example in the CI
+const dotenvConfigPath: string = process.env.DOTENV_CONFIG_PATH || "./.env";
+dotenvConfig({ path: resolve(__dirname, dotenvConfigPath) });
+
+const TESTNET_CHAIN_ID = 42069;
+const TESTNET_RPC_URL = "https://api.testnet.fhenix.zone:7747";
+
+const testnetConfig = {
+    chainId: TESTNET_CHAIN_ID,
+    url: TESTNET_RPC_URL,
+}
+
+
+// Select either private keys or mnemonic from .env file or environment variables
+const keys = process.env.PRIVATE_KEY_0;
+if (!keys) {
+  let mnemonic = process.env.MNEMONIC;
+  if (!mnemonic) {
+    throw new Error("No mnemonic or private key provided, please set MNEMONIC or KEY in your .env file");
+  }
+  testnetConfig['accounts'] = {
+    count: 10,
+    mnemonic,
+    path: "m/44'/60'/0'/0",
+  }
+} else {
+  testnetConfig['accounts'] = [keys];
+}
+
+
 const config: HardhatUserConfig = {
+  solidity: "0.8.24",
+  // Optional: defaultNetwork is already being set to "localfhenix" by fhenix-hardhat-plugin
+  defaultNetwork: "localfhenix",
   networks: {
-    hardhat: {},
+    testnet: testnetConfig,
   },
-  solidity: {
-    compilers: [
-      {
-        version: '0.6.8',
-        settings: {
-          optimizer: {
-            enabled: true,
-          },
-        },
-      },
-    ],
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./tests",
-    cache: "./cache",
-    artifacts: "./artifacts"
-  },
-  mocha: {
-    timeout: 20000
+  typechain: {
+    outDir: "types",
+    target: "ethers-v6",
   },
 };
 
