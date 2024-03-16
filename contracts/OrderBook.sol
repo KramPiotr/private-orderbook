@@ -5,7 +5,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {IOrderBook} from "./interfaces/IOrderBook.sol";
 
 import {Permissioned, Permission} from "@fhenixprotocol/contracts/access/Permissioned.sol";
-import {ebool, inEuint32, euint32, inEuint256, euint256, FHE} from "@fhenixprotocol/contracts/FHE.sol";
+import {ebool, inEuint32, euint32, inEuint32, euint32, FHE} from "@fhenixprotocol/contracts/FHE.sol";
 import {IFHERC20} from "./IFHERC20.sol";
 
 contract OrderBook is IOrderBook, ReentrancyGuard {
@@ -16,7 +16,7 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
     Order[] buyBook;
     Order[] sellBook;
 
-    euint256 internal CONST_0_ENCRYPTED;
+    euint32 internal CONST_0_ENCRYPTED;
 
     uint8 nOrders;
 
@@ -26,7 +26,7 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
     constructor(address _tradeToken, address _baseToken, uint8 nOrders) public {
         tradeToken = IFHERC20(_tradeToken);
         baseToken = IFHERC20(_baseToken);
-        CONST_0_ENCRYPTED = FHE.asEuint256(0);
+        CONST_0_ENCRYPTED = FHE.asEuint32(0);
         nOrders = nOrders;
         _initOrderBook(buyBook);
         _initOrderBook(sellBook);
@@ -34,49 +34,53 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
 
     function _initOrderBook(Order[] storage orderBook) private {
         orderBook = new Order[](nOrders);
-        for (uint8 priceDepthIdx = 0; priceDepthIdx < nOrders; priceDepthIdx++) {
-            orderBook[priceDepthIdx] = Order(CONST_0_ENCRYPTED + CONST_0_ENCRYPTED, CONST_0_ENCRYPTED + CONST_0_ENCRYPTED, CONST_0_ENCRYPTED + CONST_0_ENCRYPTED);
-        }
+        // for (uint8 priceDepthIdx = 0; priceDepthIdx < nOrders; priceDepthIdx++) {
+        //     orderBook[priceDepthIdx] = Order(CONST_0_ENCRYPTED + CONST_0_ENCRYPTED, CONST_0_ENCRYPTED + CONST_0_ENCRYPTED, CONST_0_ENCRYPTED + CONST_0_ENCRYPTED);
+        // }
     }
 
     /**
      * @notice Place buy order.
      */
     function placeBuyOrder(
-        inEuint256 calldata orderId,
-        inEuint256 calldata price,
-        inEuint256 calldata qty
+        inEuint32 calldata orderId,
+        inEuint32 calldata price,
+        inEuint32 calldata qty
     ) external override nonReentrant { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
-        // baseToken.transferFromEncrypted(
-        //     msg.sender,
-        //     address(this),
-        //     qty
-        // ); //Order: price, qty, 
-        euint256 qtyLeft = FHE.asEuint256(qty);
-        for (uint16 orderIdx = 0; orderIdx < nOrders; orderIdx++) {
+        baseToken.transferFromEncrypted(
+            msg.sender,
+            address(this),
+            qty
+        ); //Order: price, qty, 
+        euint32 qtyLeft = FHE.asEuint32(qty);
+        euint8 shiftBy = CONST_0_ENCRYPTED;
+        for (uint8 orderIdx = 0; orderIdx < nOrders; orderIdx++) {
             ebool isCrossing = price.gte(sellBook[orderIdx].price);
-            euint256 potentialQtyFilled = FHE.min(qtyLeft, sellBook[orderIdx].qty);
-            euint256 qtyFilled = FHE.select(isCrossing, potentialQtyFilled, CONST_0_ENCRYPTED);
+            euint32 potentialQtyFilled = FHE.min(qtyLeft, sellBook[orderIdx].qty);
+            euint32 qtyFilled = FHE.select(isCrossing, potentialQtyFilled, CONST_0_ENCRYPTED);
             qtyLeft = qtyLeft - qtyFilled;
+            sellBook[orderIdx].qty = sellBook[orderIdx].qty - qtyFilled;
+            euint8 incrementedShiftBy = shiftBy + FHE.asEuint8(1);
+            shiftBy = FHE.select(sellBook[orderIdx].qty.eq(CONST_0_ENCRYPTED), incrementedShiftBy, shiftBy)
 
             results[sellBook[orderIdx].id] = qtyFilled; //TODO: instead of doing this you could just transfer the funds
         }
 
         ebool shift = FHE.asEbool(false);
-        euint256 idCarriedOn = orderId;
-        euint256 priceCarriedOn = price;
-        euint256 qtyCarriedOn = qtyLeft;
+        euint32 idCarriedOn = orderId;
+        euint32 priceCarriedOn = price;
+        euint32 qtyCarriedOn = qtyLeft;
         ebool doInsert = qtyLeft.gt(CONST_0_ENCRYPTED);
-        euint256 prevPrice = CONST_0_ENCRYPTED;
-        for (uint16 orderIdx = 0; orderIdx < nOrders; orderIdx++) {
+        euint32 prevPrice = CONST_0_ENCRYPTED;
+        for (uint8 orderIdx = 0; orderIdx < nOrders; orderIdx++) {
 
             ebool isCorrectPosition = FHE.and(FHE.eq(prevPrice, price), buyBook[orderIdx].price.gt(price));
             shift = FHE.or(shift, FHE.and(doInsert, isCorrectPosition));
             prevPrice = buyBook[orderIdx].price;
 
-            euint256 nextIdCarriedOn = FHE.select(shift, buyBook[orderIdx].id, idCarriedOn);
-            euint256 nextPriceCarriedOn = FHE.select(shift, buyBook[orderIdx].price, priceCarriedOn);
-            euint256 nextQtyCarriedOn = FHE.select(shift, buyBook[orderIdx].qty, qtyCarriedOn);
+            euint32 nextIdCarriedOn = FHE.select(shift, buyBook[orderIdx].id, idCarriedOn);
+            euint32 nextPriceCarriedOn = FHE.select(shift, buyBook[orderIdx].price, priceCarriedOn);
+            euint32 nextQtyCarriedOn = FHE.select(shift, buyBook[orderIdx].qty, qtyCarriedOn);
 
             buyBook[orderIdx].id = FHE.select(shift, idCarriedOn, buyBook[orderIdx].id);
             buyBook[orderIdx].price = FHE.select(shift, priceCarriedOn, buyBook[orderIdx].price);

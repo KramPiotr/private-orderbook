@@ -24,19 +24,7 @@ const testnetConfig = {
 
 // Select either private keys or mnemonic from .env file or environment variables
 const keys = process.env.PRIVATE_KEY_0;
-if (!keys) {
-  let mnemonic = process.env.MNEMONIC;
-  if (!mnemonic) {
-    throw new Error("No mnemonic or private key provided, please set MNEMONIC or KEY in your .env file");
-  }
-  testnetConfig['accounts'] = {
-    count: 10,
-    mnemonic,
-    path: "m/44'/60'/0'/0",
-  }
-} else {
-  testnetConfig['accounts'] = [keys];
-}
+testnetConfig['accounts'] = [keys];
 
 
 const config: HardhatUserConfig = {
