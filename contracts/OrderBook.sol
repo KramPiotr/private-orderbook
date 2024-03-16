@@ -56,14 +56,12 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
             address(this),
             amountOfBaseToken
         );
-        emit PlaceBuyOrder(msg.sender, price, amountOfBaseToken);
-
         euint256 qtyLeft = FHE.asEuint256(amountOfBaseToken);
         mapping(euint256 => euint256) results;
-        for (int priceLevelIdx = 0; priceLevelIdx < nPriceLevels; priceLevelIdx++) {
-            for (int depthIdx = 0; depthIdx < priceLevelDepth; depthIdx++) {
+        for (uint8 priceLevelIdx = 0; priceLevelIdx < nPriceLevels; priceLevelIdx++) {
+            for (uint8 depthIdx = 0; depthIdx < priceLevelDepth; depthIdx++) {
 
-                ebool isCrossing = price.gte(sellBook[priceLevelIdx][depthIdx].price);
+                ebool isCrossing = price.gte(sellPriceFromLevel[priceLevelIdx]);
                 euint256 potentialQtyFilled = FHE.min(qtyLeft, sellBook[priceLevelIdx][depthIdx].qty);
                 euint256 qtyFilled = FHE.select(isCrossing, potentialQtyFilled, CONST_0_ENCRYPTED);
                 qtyLeft = qtyLeft - qtyFilled;
@@ -72,103 +70,34 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
             }
         }
 
-        /**
-         * @notice if has order in sell book, and price >= min sell price
-         */
-        uint256 sellPricePointer = minSellPrice;
-        euint256 amountReflect = FHE.asEuint256(amountOfBaseToken);
-        if (minSellPrice > 0 && price >= minSellPrice) {
-            while (
-                amountReflect.gt(CONST_0_ENCRYPTED) &&
-                sellPricePointer <= price &&
-                sellPricePointer != 0
-            ) {
-                uint8 i = 1;
-                uint256 higherPrice = sellSteps[sellPricePointer].higherPrice;
-                while (
-                    i <= sellOrdersInStepCounter[sellPricePointer] &&
-                    amountReflect.gt(CONST_0_ENCRYPTED)
-                ) {
-                    //TODO: if prices are public, would it make a lot of sense to remove the encrypted checks from loops and if statements? If so, which ones are worth modifying?
-                        uint256 orderAmount = sellOrdersInStep[
-                            sellPricePointer
-                        ][i].amount;
-                        uint256 filledQuantity = FHE.min(
-                            orderAmount,
-                            amountReflect
-                        );
+        ebool priceNotInBook = FHE.ne(buyPriceFromLevel[0], price);
+        for (uint8 priceLevelIdx = 1; priceLevelIdx < nPriceLevels; priceLevelIdx++) {
+            priceNotInBook = FHE.and(priceNotInBook, FHE.ne(buyPriceFromLevel[priceLevelIdx], price));
+        }
 
-                        amountReflect = amountReflect.sub(filledQuantity);
+        ebool doReplaceMin = FHE.and(qtyLeft.gt(0), priceNotInBook);
+        euint256 minPrice = _getMin(buyPriceFromLevel);
 
-                        if (filledQuantity == orderAmount) {
-                            // Order has been filled
-                            if (
-                                i == sellOrdersInStepCounter[sellPricePointer]
-                            ) {
-                                if (higherPrice > 0) {
-                                    sellSteps[higherPrice].lowerPrice = 0;
-                                }
-                                delete sellSteps[sellPricePointer];
-                                minSellPrice = higherPrice;
-                            }
-                        } else {
-                            // Order has been partially filled
-                            newSellOrdersInStep[newOrdersIndex] = orderAmount
-                                .sub(filledQuantity);
-                            newOrdersIndex++;
-                        }
-
-                        i += 1;
-
-                    // sellPricePointer = higherPrice;
-                    // sellOrdersInStepCounter[sellPricePointer] = newOrdersIndex;
-                    // for (uint256 j = 0; j < newOrdersIndex; j++) {
-                    //     sellOrdersInStep[sellPricePointer][j + 1]
-                    //         .amount = newSellOrdersInStep[j];
-                    // }
-
-                    if (
-                        amountReflect.gte(
-                            sellOrdersInStep[sellPricePointer][i].amount
-                        )
-                    ) {
-                        //if the last order has been matched, delete the step
-                        if (i == sellOrdersInStepCounter[sellPricePointer]) {
-                            if (higherPrice > 0) {
-                                sellSteps[higherPrice].lowerPrice = 0;
-                            }
-                            delete sellSteps[sellPricePointer];
-                            minSellPrice = higherPrice;
-                        }
-
-                        amountReflect = amountReflect.sub(
-                            sellOrdersInStep[sellPricePointer][i].amount
-                        );
-
-                        // delete order from storage
-                        delete sellOrdersInStep[sellPricePointer][i];
-                        sellOrdersInStepCounter[sellPricePointer] -= 1;
-                    } else {
-                        sellSteps[sellPricePointer].amount = sellSteps[
-                            sellPricePointer
-                        ].amount.sub(amountReflect);
-                        sellOrdersInStep[sellPricePointer][i]
-                            .amount = sellOrdersInStep[sellPricePointer][i]
-                            .amount
-                            .sub(amountReflect);
-                        amountReflect = CONST_0_ENCRYPTED + CONST_0_ENCRYPTED; //Done to obfuscate 0
-                    }
-                    i += 1;
-                }
-                sellPricePointer = higherPrice;
+        for (uint8 idx = 0; idx < prices.length; idx++) {
+            ebool isReplaced = FHE.and(doReplaceMin, FHE.eq(minPrice, buyPriceFromLevel[idx]));
+            buyPriceFromLevel[idx].price = FHE.select(isReplaced, price, buyPriceFromLevel[idx].price);
+            buyBook[idx][0].orderId = FHE.select(isReplaced, orderId, buyBook[idx][0].orderId);
+            buyBook[idx][0].price = FHE.select(isReplaced, price, buyBook[idx][0].price);
+            for (uint depthIdx = 1; depthIdx < priceLevelDepth; depthIdx++) {
+                buyBook[idx][depthIdx].orderId = FHE.select(isReplaced, CONST_0_ENCRYPTED, buyBook[idx][depthIdx].orderId);
+                buyBook[idx][depthIdx].price = FHE.select(isReplaced, CONST_0_ENCRYPTED, buyBook[idx][depthIdx].price);
             }
         }
-        /**
-         * @notice draw to buy book the rest
-         */
-        if (amountReflect > 0) {
-            _drawToBuyBook(price, amountReflect);
+
+        return results;
+    }
+
+    function _getMin(euint256[] prices) private returns (euint256) {
+        euint256 minPrice = prices[0];
+        for (uint8 idx = 1; idx < prices.length; idx++) {
+            minPrice = FHE.min(minPrice, prices[idx]);
         }
+        return minPrice;
     }
 
     /**
