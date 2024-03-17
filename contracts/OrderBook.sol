@@ -135,4 +135,97 @@ contract OrderBook is ReentrancyGuard {
         }
     }
 
+    function placeSellOrder(
+        inEuint8 calldata orderIdBytes,
+        inEuint8 calldata priceBytes,
+        inEuint8 calldata qtyBytes
+    ) external nonReentrant {
+        
+        euint8 orderId = FHE.asEuint8(orderIdBytes);
+        euint8 qtyLeft = FHE.asEuint8(qtyBytes);
+        euint8 price = FHE.asEuint8(priceBytes);
+
+        // baseToken.transferFromEncrypted(
+        //     msg.sender,
+        //     address(this),
+        //     qtyLeft.toU32()
+        // ); //Order: price, qty, 
+        euint8 shiftBy = CONST_0_ENCRYPTED;
+        for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
+            ebool isCrossing = price.lte(buyBook[orderIdx].price);
+            euint8 potentialQtyFilled = FHE.min(qtyLeft, buyBook[orderIdx].qty);
+            euint8 qtyFilled = FHE.select(isCrossing, potentialQtyFilled, CONST_0_ENCRYPTED);
+            qtyLeft = qtyLeft - qtyFilled;
+            buyBook[orderIdx].qty = buyBook[orderIdx].qty - qtyFilled;
+            euint8 incrementedShiftBy = shiftBy + CONST_1_ENCRYPTED;
+            shiftBy = FHE.select(buyBook[orderIdx].qty.eq(CONST_0_ENCRYPTED), incrementedShiftBy, shiftBy);
+
+            // tradeToken.transferFromEncrypted( //this causes header timeout issue :(
+            //     address(this),
+            //     msg.sender,
+            //     qtyFilled.toU32()
+            // );
+
+            lastFills[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //doing this hack as transferrring caused issues
+        }
+
+        lastShiftBy = shiftBy;
+
+        qtyNotFilled = qtyLeft;
+    }
+
+    function shiftBuyBook() external {
+        euint8 shiftBy = lastShiftBy;
+        for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS - 1; shiftIdx++) {
+            ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
+            shiftBy = FHE.select(doShift, shiftBy - CONST_1_ENCRYPTED, shiftBy);
+            euint8 lastPrice = CONST_0_ENCRYPTED;
+            euint8 lastQty = CONST_0_ENCRYPTED;
+            for (uint8 orderIdx = N_ORDERS - 1; orderIdx >= 0; orderIdx--) {
+                euint8 nextLastPrice = buyBook[orderIdx].price;
+                euint8 nextLastQty = buyBook[orderIdx].qty;
+
+                buyBook[orderIdx].price = FHE.select(doShift, lastPrice, nextLastPrice);
+                buyBook[orderIdx].qty = FHE.select(doShift, lastQty, nextLastQty);
+
+                lastPrice = nextLastPrice;
+                lastQty = nextLastQty;
+            }
+        }
+    }
+
+
+    function insertSellOrder(
+        inEuint8 calldata orderIdBytes,
+        inEuint8 calldata priceBytes
+    ) external nonReentrant {
+
+        euint8 orderId = FHE.asEuint8(orderIdBytes);
+        euint8 price = FHE.asEuint8(priceBytes);
+
+        ebool shift = FHE.asEbool(false);
+        euint8 idCarriedOn = orderId;
+        euint8 priceCarriedOn = price;
+        euint8 qtyCarriedOn = qtyNotFilled;
+        ebool doInsert = qtyNotFilled.gt(CONST_0_ENCRYPTED);
+        euint8 prevPrice = CONST_0_ENCRYPTED;
+        for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
+
+            ebool isCorrectPosition = FHE.and(FHE.eq(prevPrice, price), sellBook[orderIdx].price.lt(price));
+            shift = FHE.or(shift, FHE.and(doInsert, isCorrectPosition));
+            prevPrice = sellBook[orderIdx].price;
+
+            euint8 nextIdCarriedOn = FHE.select(shift, sellBook[orderIdx].id, idCarriedOn);
+            euint8 nextPriceCarriedOn = FHE.select(shift, sellBook[orderIdx].price, priceCarriedOn);
+            euint8 nextQtyCarriedOn = FHE.select(shift, sellBook[orderIdx].qty, qtyCarriedOn);
+
+            sellBook[orderIdx].id = FHE.select(shift, idCarriedOn, sellBook[orderIdx].id);
+            sellBook[orderIdx].price = FHE.select(shift, priceCarriedOn, sellBook[orderIdx].price);
+            sellBook[orderIdx].qty = FHE.select(shift, qtyCarriedOn, sellBook[orderIdx].qty);
+
+            idCarriedOn = nextIdCarriedOn;
+            priceCarriedOn = nextPriceCarriedOn;
+            qtyCarriedOn = nextQtyCarriedOn;
+        }
+    }
 }
