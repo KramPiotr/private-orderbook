@@ -43,7 +43,8 @@ async function main() {
     const buyOrder = await orderBookContract.placeBuyOrder(encryptedOrderId, encryptedPrice, encryptedQty);
     await buyOrder.wait();
 
-    console.log(JSON.stringify(buyOrder, null, 2));
+    // console.log(JSON.stringify(buyOrder, null, 2));
+    console.log("Placed order successfully!");
 
 }
 

@@ -9,17 +9,6 @@ import {IFHERC20} from "./IFHERC20.sol";
 
 contract OrderBook is ReentrancyGuard {
 
-    struct Order {
-        euint8 id;
-        euint8 qty;
-        euint8 price;
-    }
-
-    struct ExecutionResult {
-        euint8 orderId;
-        euint8 quantity;
-    }
-
     IFHERC20 public tradeToken;
     IFHERC20 public baseToken;
 
@@ -30,6 +19,21 @@ contract OrderBook is ReentrancyGuard {
 
     euint8 internal CONST_0_ENCRYPTED;
     euint8 internal CONST_1_ENCRYPTED;
+
+    struct Order {
+        euint8 id;
+        euint8 qty;
+        euint8 price;
+    }
+    struct ExecutionResult {
+        euint8 orderId;
+        euint8 quantity;
+    }
+
+    struct PlaceOrderResult {
+        ExecutionResult[N_ORDERS] fills;
+        euint8 shiftBy;
+    }
 
     /**
      * @notice Constructor
@@ -50,7 +54,7 @@ contract OrderBook is ReentrancyGuard {
         inEuint8 calldata orderIdBytes,
         inEuint8 calldata priceBytes,
         inEuint8 calldata qtyBytes
-    ) external nonReentrant returns (ExecutionResult[N_ORDERS] memory){ //TODO: we need to make sure that there is a function to check whether your order is still in the order book
+    ) external nonReentrant returns (PlaceOrderResult memory){ //TODO: we need to make sure that there is a function to check whether your order is still in the order book
         
         euint8 orderId = FHE.asEuint8(orderIdBytes);
         euint8 qtyLeft = FHE.asEuint8(qtyBytes);
@@ -81,22 +85,24 @@ contract OrderBook is ReentrancyGuard {
             results[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //TODO: instead of doing this you could just transfer the funds
         }
 
-        for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS; shiftIdx++) {
-            ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
-            shiftBy = FHE.select(doShift, shiftBy - CONST_1_ENCRYPTED, shiftBy);
-            euint8 lastPrice = CONST_0_ENCRYPTED;
-            euint8 lastQty = CONST_0_ENCRYPTED;
-            for (uint8 orderIdx = N_ORDERS - 1; orderIdx >= 0; orderIdx--) {
-                euint8 nextLastPrice = sellBook[orderIdx].price;
-                euint8 nextLastQty = sellBook[orderIdx].qty;
+        return PlaceOrderResult(results, shiftBy);
 
-                sellBook[orderIdx].price = FHE.select(doShift, lastPrice, nextLastPrice);
-                sellBook[orderIdx].qty = FHE.select(doShift, lastQty, nextLastQty);
+        // for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS; shiftIdx++) {
+        //     ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
+        //     shiftBy = FHE.select(doShift, shiftBy - CONST_1_ENCRYPTED, shiftBy);
+        //     euint8 lastPrice = CONST_0_ENCRYPTED;
+        //     euint8 lastQty = CONST_0_ENCRYPTED;
+        //     for (uint8 orderIdx = N_ORDERS - 1; orderIdx >= 0; orderIdx--) {
+        //         euint8 nextLastPrice = sellBook[orderIdx].price;
+        //         euint8 nextLastQty = sellBook[orderIdx].qty;
 
-                lastPrice = nextLastPrice;
-                lastQty = nextLastQty;
-            }
-        }
+        //         sellBook[orderIdx].price = FHE.select(doShift, lastPrice, nextLastPrice);
+        //         sellBook[orderIdx].qty = FHE.select(doShift, lastQty, nextLastQty);
+
+        //         lastPrice = nextLastPrice;
+        //         lastQty = nextLastQty;
+        //     }
+        // }
 
         // ebool shift = FHE.asEbool(false);
         // euint8 idCarriedOn = orderId;
@@ -122,6 +128,29 @@ contract OrderBook is ReentrancyGuard {
         //     priceCarriedOn = nextPriceCarriedOn;
         //     qtyCarriedOn = nextQtyCarriedOn;
         // }
-        return results;
     }
+
+    function shiftSellBook(
+        inEuint8 calldata shiftByBytes
+    ) external { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
+
+        euint8 shiftBy = FHE.asEuint8(shiftByBytes);
+        for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS; shiftIdx++) {
+            ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
+            shiftBy = FHE.select(doShift, shiftBy - CONST_1_ENCRYPTED, shiftBy);
+            euint8 lastPrice = CONST_0_ENCRYPTED;
+            euint8 lastQty = CONST_0_ENCRYPTED;
+            for (uint8 orderIdx = N_ORDERS - 1; orderIdx >= 0; orderIdx--) {
+                euint8 nextLastPrice = sellBook[orderIdx].price;
+                euint8 nextLastQty = sellBook[orderIdx].qty;
+
+                sellBook[orderIdx].price = FHE.select(doShift, lastPrice, nextLastPrice);
+                sellBook[orderIdx].qty = FHE.select(doShift, lastQty, nextLastQty);
+
+                lastPrice = nextLastPrice;
+                lastQty = nextLastQty;
+            }
+        }
+    }
+
 }

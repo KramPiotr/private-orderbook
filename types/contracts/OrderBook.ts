@@ -34,17 +34,44 @@ export declare namespace OrderBook {
     orderId: bigint,
     quantity: bigint
   ] & { orderId: bigint; quantity: bigint };
+
+  export type PlaceOrderResultStruct = {
+    fills: [OrderBook.ExecutionResultStruct, OrderBook.ExecutionResultStruct];
+    shiftBy: BigNumberish;
+  };
+
+  export type PlaceOrderResultStructOutput = [
+    fills: [
+      OrderBook.ExecutionResultStructOutput,
+      OrderBook.ExecutionResultStructOutput
+    ],
+    shiftBy: bigint
+  ] & {
+    fills: [
+      OrderBook.ExecutionResultStructOutput,
+      OrderBook.ExecutionResultStructOutput
+    ];
+    shiftBy: bigint;
+  };
 }
 
 export interface OrderBookInterface extends Interface {
   getFunction(
-    nameOrSignature: "baseToken" | "placeBuyOrder" | "tradeToken"
+    nameOrSignature:
+      | "baseToken"
+      | "placeBuyOrder"
+      | "shiftSellBook"
+      | "tradeToken"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "placeBuyOrder",
     values: [InEuint8Struct, InEuint8Struct, InEuint8Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "shiftSellBook",
+    values: [InEuint8Struct]
   ): string;
   encodeFunctionData(
     functionFragment: "tradeToken",
@@ -54,6 +81,10 @@ export interface OrderBookInterface extends Interface {
   decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "placeBuyOrder",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "shiftSellBook",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "tradeToken", data: BytesLike): Result;
@@ -110,12 +141,13 @@ export interface OrderBook extends BaseContract {
       priceBytes: InEuint8Struct,
       qtyBytes: InEuint8Struct
     ],
-    [
-      [
-        OrderBook.ExecutionResultStructOutput,
-        OrderBook.ExecutionResultStructOutput
-      ]
-    ],
+    [OrderBook.PlaceOrderResultStructOutput],
+    "nonpayable"
+  >;
+
+  shiftSellBook: TypedContractMethod<
+    [shiftByBytes: InEuint8Struct],
+    [void],
     "nonpayable"
   >;
 
@@ -136,14 +168,12 @@ export interface OrderBook extends BaseContract {
       priceBytes: InEuint8Struct,
       qtyBytes: InEuint8Struct
     ],
-    [
-      [
-        OrderBook.ExecutionResultStructOutput,
-        OrderBook.ExecutionResultStructOutput
-      ]
-    ],
+    [OrderBook.PlaceOrderResultStructOutput],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "shiftSellBook"
+  ): TypedContractMethod<[shiftByBytes: InEuint8Struct], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "tradeToken"
   ): TypedContractMethod<[], [string], "view">;
