@@ -228,7 +228,7 @@ contract OrderBook is ReentrancyGuard {
         euint8 prevPrice = CONST_0_ENCRYPTED;
         for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
 
-            ebool isCorrectPosition = FHE.and(price.lte(prevPrice), sellBook[orderIdx].price.lt(price));
+            ebool isCorrectPosition = FHE.or(sellBook[orderIdx].price.eq(CONST_0_ENCRYPTED), FHE.and(price.lte(prevPrice), sellBook[orderIdx].price.lt(price)));
             shift = FHE.or(shift, FHE.and(doInsert, isCorrectPosition));
             prevPrice = sellBook[orderIdx].price;
 

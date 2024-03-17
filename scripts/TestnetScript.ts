@@ -106,12 +106,6 @@ const permit = await getPermit(orderBook.target, ethers.provider);
     const insertSellOrder = await orderBook.insertSellOrder(encryptedOrderId, encryptedPrice);
     await insertSellOrder.wait();
 
-    // const lastShiftBy = await orderBookContract.lastShiftBy();
-
-    // const shiftByDecrypted = await fhenixjs.unseal(orderBookAddress, lastShiftBy.toString());
-
-    // console.log(shiftByDecrypted);
-    // console.log(JSON.stringify(buyOrder, null, 2));
     console.log("Placed order successfully!");
 };
 
