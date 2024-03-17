@@ -11,7 +11,7 @@ contract OrderBook is ReentrancyGuard {
     IFHERC20 public tradeToken;
     IFHERC20 public baseToken;
 
-    uint8 constant N_ORDERS = 2;
+    uint8 constant N_ORDERS = 5;
 
     Order[N_ORDERS] buyBook;
     Order[N_ORDERS] sellBook;

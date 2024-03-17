@@ -45,6 +45,7 @@ export function OrderComponent() {
     console.log("Price is " + numPrice);
     console.log("Qty is " + numQty);
 
+    const encryptedOrderId = await fhenix.encrypt_uint8(10);
     const encryptedPrice = await fhenix.encrypt_uint8(numPrice);
     const encryptedQty = await fhenix.encrypt_uint8(numQty);
 
@@ -62,6 +63,13 @@ export function OrderComponent() {
 
     const buyOrder = await OrderBookContract.contract.placeBuyOrder(encryptedPrice, encryptedQty);
     buyOrder.wait();
+
+    const doSellShift = await OrderBookContract.contract.shiftSellBook();
+    await doSellShift.wait();
+
+    const insertBuyOrder = await OrderBookContract.contract.insertBuyOrder(encryptedOrderId, encryptedPrice);
+    await insertBuyOrder.wait();
+
   }
 
   async function sell() {
@@ -76,6 +84,7 @@ export function OrderComponent() {
     console.log("Price is " + numPrice);
     console.log("Qty is " + numQty);
 
+    const encryptedOrderId = await fhenix.encrypt_uint8(12);
     const encryptedPrice = await fhenix.encrypt_uint8(numPrice);
     const encryptedQty = await fhenix.encrypt_uint8(numQty);
 
@@ -93,6 +102,12 @@ export function OrderComponent() {
 
     const sellOrder = await OrderBookContract.contract.placeSellOrder(encryptedPrice, encryptedQty);
     sellOrder.wait();
+
+    const doBuyShift = await OrderBookContract.contract.shiftBuyBook();
+    await doBuyShift.wait();
+
+    const insertSellOrder = await OrderBookContract.contract.insertSellOrder(encryptedOrderId, encryptedPrice);
+    await insertSellOrder.wait();
   }
   return (
     <div>
