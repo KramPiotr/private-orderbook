@@ -17,7 +17,7 @@ contract OrderBook is ReentrancyGuard {
     Order[N_ORDERS] buyBook;
     Order[N_ORDERS] sellBook;
 
-    ExecutionResult[N_ORDERS] public lastFills;//TODO: hack to prove that it's working, will be changed later
+    ExecutionResult[N_ORDERS] public lastFills;//hack to prove that it's working, will be changed later
     euint8 public lastShiftBy;
     euint8 public qtyNotFilled;
 
@@ -34,26 +34,18 @@ contract OrderBook is ReentrancyGuard {
         euint8 quantity;
     }
 
-    /**
-     * @notice Constructor
-     */
     constructor(address _tradeToken, address _baseToken) {
         tradeToken = IFHERC20(_tradeToken);
         baseToken = IFHERC20(_baseToken);
         CONST_0_ENCRYPTED = FHE.asEuint8(0);
         CONST_1_ENCRYPTED = FHE.asEuint8(1);
-        // buyBook = new Order[](N_ORDERS);
-        // sellBook = new Order[](N_ORDERS);
     }
 
-    /**
-     * @notice Place buy order.
-     */
     function placeBuyOrder(
         inEuint8 calldata orderIdBytes,
         inEuint8 calldata priceBytes,
         inEuint8 calldata qtyBytes
-    ) external nonReentrant { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
+    ) external nonReentrant {
         
         euint8 orderId = FHE.asEuint8(orderIdBytes);
         euint8 qtyLeft = FHE.asEuint8(qtyBytes);
@@ -74,13 +66,13 @@ contract OrderBook is ReentrancyGuard {
             euint8 incrementedShiftBy = shiftBy + CONST_1_ENCRYPTED;
             shiftBy = FHE.select(sellBook[orderIdx].qty.eq(CONST_0_ENCRYPTED), incrementedShiftBy, shiftBy);
 
-            // tradeToken.transferFromEncrypted( //TODO: this causes header timeout issue :(
+            // tradeToken.transferFromEncrypted( //this causes header timeout issue :(
             //     address(this),
             //     msg.sender,
             //     qtyFilled.toU32()
             // );
 
-            lastFills[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //TODO: instead of doing this you could just transfer the funds
+            lastFills[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //doing this hack as transferrring caused issues
         }
 
         lastShiftBy = shiftBy;
@@ -88,8 +80,7 @@ contract OrderBook is ReentrancyGuard {
         qtyNotFilled = qtyLeft;
     }
 
-    function shiftSellBook() external { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
-
+    function shiftSellBook() external {
         euint8 shiftBy = lastShiftBy;
         for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS - 1; shiftIdx++) {
             ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
@@ -113,7 +104,7 @@ contract OrderBook is ReentrancyGuard {
     function insertBuyOrder(
         inEuint8 calldata orderIdBytes,
         inEuint8 calldata priceBytes
-    ) external nonReentrant { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
+    ) external nonReentrant {
 
         euint8 orderId = FHE.asEuint8(orderIdBytes);
         euint8 price = FHE.asEuint8(priceBytes);
