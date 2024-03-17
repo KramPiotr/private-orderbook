@@ -1,10 +1,5 @@
 # Private Order Book
 
-Steps to run locally:
-
-- `pnpm install`
-- `pnpm run localfhenix:start`
-
 ## Description of the project
 
 I created a darkpool, which is a private orderbook, using FHE.
@@ -48,7 +43,7 @@ However, the above approach is not feasible when implementing an onchain darkpoo
 #### Public order book implementation
 
 First of all, I familiarised myself with the way that public order books are efficiently implemented.
-My plan was to adapt it to use FHE (https://github.com/KramPiotr/private-orderbook/commit/bff999be532ca68a81d8b0fa96ce144e3cda98f1)
+My plan was to adapt it to use FHE: https://github.com/KramPiotr/private-orderbook/commit/bff999be532ca68a81d8b0fa96ce144e3cda98f1
 
 However, upon realising the above challenges and trying out half-baked solutions with public prices but private quantities, I decided to abandon this code and approach all together.
 
@@ -91,10 +86,12 @@ A couple of ideas I can think of:
 
 We know that FHE is Touring complete at this point so it's just a matter of finding the way :)
 
+## Practical tips
 
+Steps to run locally:
 
-
-
+- `pnpm install`
+- `pnpm run localfhenix:start`
 
 
 
