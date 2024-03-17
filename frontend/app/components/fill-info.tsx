@@ -35,7 +35,7 @@ export function FillInfo() {
     const lastFillQty = fhenix.unseal(ORDERBOOK_ADDRESS, eLastFillQty);
 
     const eLastOrderId =
-      await OrderBookContract.contract.getMostCompetitiveFillQty(permission);
+      await OrderBookContract.contract.getMostCompetitiveFillOrderId(permission);
     const lastOrderId = fhenix.unseal(ORDERBOOK_ADDRESS, eLastOrderId);
 
     setLastFillQty(String(lastFillQty));
