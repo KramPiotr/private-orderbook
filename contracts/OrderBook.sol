@@ -13,7 +13,7 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
     IFHERC20 public tradeToken;
     IFHERC20 public baseToken;
 
-    uint8 constant N_ORDERS = 3;
+    uint8 constant N_ORDERS = 2;
 
     Order[N_ORDERS] buyBook;
     Order[N_ORDERS] sellBook;
@@ -44,11 +44,11 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
         
         euint8 qtyLeft = FHE.asEuint8(qtyBytes);
         euint8 price = FHE.asEuint8(priceBytes);
-        baseToken.transferFromEncrypted(
-            msg.sender,
-            address(this),
-            qtyLeft.toU32()
-        ); //Order: price, qty, 
+        // baseToken.transferFromEncrypted(
+        //     msg.sender,
+        //     address(this),
+        //     qtyLeft.toU32()
+        // ); //Order: price, qty, 
         euint8 shiftBy = CONST_0_ENCRYPTED;
         for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
             ebool isCrossing = price.gte(sellBook[orderIdx].price);
@@ -59,11 +59,11 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
             euint8 incrementedShiftBy = shiftBy + CONST_1_ENCRYPTED;
             shiftBy = FHE.select(sellBook[orderIdx].qty.eq(CONST_0_ENCRYPTED), incrementedShiftBy, shiftBy);
 
-            tradeToken.transferFromEncrypted(
-                address(this),
-                msg.sender,
-                qtyFilled.toU32()
-            );
+            // tradeToken.transferFromEncrypted(
+            //     address(this),
+            //     msg.sender,
+            //     qtyFilled.toU32()
+            // );
 
             // results[sellBook[orderIdx].id] = qtyFilled; //TODO: instead of doing this you could just transfer the funds
         }
@@ -109,6 +109,6 @@ contract OrderBook is IOrderBook, ReentrancyGuard {
             priceCarriedOn = nextPriceCarriedOn;
             qtyCarriedOn = nextQtyCarriedOn;
         }
-        // return results;
+    //     // return results;
     }
 }

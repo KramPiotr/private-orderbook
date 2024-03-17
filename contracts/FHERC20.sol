@@ -94,9 +94,9 @@ contract FHERC20 is IFHERC20, ERC20, Permissioned {
         _mint(msg.sender, FHE.decrypt(amountToUnwrap));
     }
 
-//    function mint(uint256 amount) public {
-//        _mint(msg.sender, amount);
-//    }
+   function mint(address to, uint256 amount) public { //for testing purposes
+       _mint(to, amount);
+   }
 
     function _mintEncrypted(address to, inEuint32 memory encryptedAmount) internal {
         euint32 amount = FHE.asEuint32(encryptedAmount);

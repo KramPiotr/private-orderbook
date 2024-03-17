@@ -1,6 +1,21 @@
 import chalk from "chalk";
 import hre from "hardhat";
 
+
+/*
+LOCAL
+
+Base token address 0xbeb4eF1fcEa618C6ca38e3828B00f8D481EC2CC2
+Trade token address 0x5c93e3B7824035B375E373FaC1578D4089dcE77A
+OrderBook contract:  0xD30C778F7Fd47CCfB93Caa589195eb288FC768c8
+
+TESTNET
+
+Base token address 0xAf17c42d8a3A8aC4a1743B047655BA2fffb9A1a9
+Trade token address 0x731f33D92812FD38a1Fbe38Bcf73fd87129d5087
+OrderBook contract:  0xbDdA27903B576F424E22D6c72E222F673a32b439
+*/
+
 async function main() {
 
   const { fhenixjs, ethers } = hre;

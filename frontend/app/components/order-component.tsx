@@ -21,15 +21,20 @@ import { ethers } from "ethers";
 import { useEthersSigner } from "@/lib/ethers";
 import { orderbookABI } from "@/abi/orderbookABI";
 
-const ORDERBOOK_ADDRESS = "0xB98a8E70ab73b1c6A430B05E0f60581897bC51aF";
-const A_TOKEN_ADDRESS = "0x0E13Ca21Fba16D8B4C11D5330f4aA65d9d614187";
-const B_TOKEN_ADDRESS = "0xba8507bFcA9Fe62A5369c74d8f71fb2c9f5d484b";
+const ORDERBOOK_ADDRESS = "0xAf17c42d8a3A8aC4a1743B047655BA2fffb9A1a9";
+const A_TOKEN_ADDRESS = "0x731f33D92812FD38a1Fbe38Bcf73fd87129d5087";
+const B_TOKEN_ADDRESS = "0xbDdA27903B576F424E22D6c72E222F673a32b439";
+
 
 export function OrderComponent() {
   const [baseToken, setBaseToken] = useState<any>(tokens[0]);
   const [tradeToken, setTradeToken] = useState<any>(tokens[1]);
   const [price, setPrice] = useState<string>('0');
   const [qty, setQty] = useState<string>('0');
+
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const fhenix = new FhenixClient({ provider });
+  const signer: any = useEthersSigner();
 
   async function buy() {
     const numPrice = Math.round(Number(price)); //In the future multiply by 10^x and then round, currently price and qty need to be uint8 because of computational complexity
@@ -42,10 +47,6 @@ export function OrderComponent() {
 
     console.log("Price is " + numPrice);
     console.log("Qty is " + numQty);
-
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const fhenix = new FhenixClient({ provider });
-    const signer: any = useEthersSigner();
 
     const encryptedPrice = await fhenix.encrypt_uint8(numPrice);
     const encryptedQty = await fhenix.encrypt_uint8(numQty);

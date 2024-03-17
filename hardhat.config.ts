@@ -18,6 +18,7 @@ const TESTNET_RPC_URL = "https://api.testnet.fhenix.zone:7747";
 const testnetConfig = {
     chainId: TESTNET_CHAIN_ID,
     url: TESTNET_RPC_URL,
+    timeout: 100000,
 }
 
 
@@ -36,6 +37,9 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: "types",
     target: "ethers-v6",
+  },
+  mocha: {
+    timeout: 100000, // Set a higher timeout value (e.g., 200 seconds)
   },
 };
 
