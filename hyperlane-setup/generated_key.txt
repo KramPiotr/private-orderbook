@@ -1,0 +1,3 @@
+Successfully created new keypair.
+Address:     0x39CE3B13C6199c1E060E556A4960664Fa1F5a26a
+Private key: 0x8b78063f463b3f25bf7803aab86e06fff721a086c07d1d46377788b1c5cd0abc

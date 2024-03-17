@@ -1,0 +1,5 @@
+fhenix:
+  threshold: 1
+  validators:
+    - "0x14b8B257Ed2C330d1283F4dFb28a66c8475C54Bb"
+

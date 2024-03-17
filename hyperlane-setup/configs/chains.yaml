@@ -1,0 +1,10 @@
+fhenix:
+  name: fhenix
+  chainId: 42069
+  domainId: 42069
+  protocol: ethereum
+  rpcUrls:
+    - http: https://api.testnet.fhenix.zone:7747
+  transactionOverrides:
+    gasLimit: 5000000
+

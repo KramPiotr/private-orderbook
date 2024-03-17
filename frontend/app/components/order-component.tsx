@@ -68,7 +68,34 @@ export function OrderComponent() {
   }
 
   async function sell() {
-    console.log("inside sell");
+    const numPrice = Math.round(Number(price)); //In the future multiply by 10^x and then round, currently price and qty need to be uint8 because of computational complexity
+    const numQty = Math.round(Number(qty));
+
+    if (numPrice == 0 || numQty == 0) {
+      console.error("Price or qty are invalid");
+      return;
+    }
+
+    console.log("Price is " + numPrice);
+    console.log("Qty is " + numQty);
+
+    const encryptedPrice = await fhenix.encrypt_uint8(numPrice);
+    const encryptedQty = await fhenix.encrypt_uint8(numQty);
+
+    console.log("Encrypted price is " + JSON.stringify(encryptedPrice, null, 2));
+    console.log("Encrypted qty is " + JSON.stringify(encryptedQty, null, 2));
+
+    const OrderBookContract = {
+      contract: new ethers.Contract(
+        ORDERBOOK_ADDRESS,
+        orderbookABI,
+        signer as any
+      ),
+      address: ORDERBOOK_ADDRESS
+    };
+
+    const sellOrder = await OrderBookContract.contract.placeSellOrder(encryptedPrice, encryptedQty);
+    sellOrder.wait();
   }
   return (
     <div>
