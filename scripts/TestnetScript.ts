@@ -57,10 +57,12 @@ const permit = await getPermit(orderBook.target, ethers.provider);
 
   const orderId = 1;
   const price = 3;
+  const pricePlusOne = 4;
   const qty = 4;
 
   const encryptedOrderId = await fhenixjs.encrypt_uint8(orderId);
   const encryptedPrice = await fhenixjs.encrypt_uint8(price);
+  const encryptedPricePlusOne = await fhenixjs.encrypt_uint8(pricePlusOne);
   const encryptedQty = await fhenixjs.encrypt_uint8(qty);
 
     // console.log("Encrypted price is " + JSON.stringify(encryptedPrice, null, 2));
@@ -83,8 +85,8 @@ const permit = await getPermit(orderBook.target, ethers.provider);
     console.log("Qty not filled " + String(qtyNotFilled));
 
 
-    // const doShift = await orderBook.shiftSellBook({gasLimit: 90_000_000});
-    // await doShift.wait();
+    const doSellShift = await orderBook.shiftSellBook();
+    await doSellShift.wait();
 
     const insertBuyOrder = await orderBook.insertBuyOrder(encryptedOrderId, encryptedPrice);
     await insertBuyOrder.wait();
@@ -93,15 +95,15 @@ const permit = await getPermit(orderBook.target, ethers.provider);
     const buyQty = fhenixjs.unseal(orderBook.target, eBuyQty);
     console.log("Most competitive buy qty " + String(buyQty));
 
-    const sellOrder = await orderBook.placeSellOrder(encryptedPrice, encryptedQty);
+    const sellOrder = await orderBook.placeSellOrder(encryptedPricePlusOne, encryptedQty);
     await sellOrder.wait();
 
     const eSellFillQty = await orderBook.getMostCompetitiveFillQty(permission);
     const sellFillQty = fhenixjs.unseal(orderBook.target, eSellFillQty);
     console.log("Filled quantity with the most competitive buy " + String(sellFillQty));
 
-    // const doShift = await orderBook.shiftBuyBook({gasLimit: 90_000_000});
-    // await doShift.wait();
+    const doBuyShift = await orderBook.shiftBuyBook();
+    await doBuyShift.wait();
 
     const insertSellOrder = await orderBook.insertSellOrder(encryptedOrderId, encryptedPrice);
     await insertSellOrder.wait();
