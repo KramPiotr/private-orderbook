@@ -17,6 +17,8 @@ contract OrderBook is ReentrancyGuard {
     Order[N_ORDERS] buyBook;
     Order[N_ORDERS] sellBook;
 
+    PlaceOrderResult public lastPlaceOrderResult; //TODO: hack to prove that it's working, will be changed later
+
     euint8 internal CONST_0_ENCRYPTED;
     euint8 internal CONST_1_ENCRYPTED;
 
@@ -54,13 +56,12 @@ contract OrderBook is ReentrancyGuard {
         inEuint8 calldata orderIdBytes,
         inEuint8 calldata priceBytes,
         inEuint8 calldata qtyBytes
-    ) external nonReentrant returns (PlaceOrderResult memory){ //TODO: we need to make sure that there is a function to check whether your order is still in the order book
+    ) external nonReentrant { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
         
         euint8 orderId = FHE.asEuint8(orderIdBytes);
         euint8 qtyLeft = FHE.asEuint8(qtyBytes);
         euint8 price = FHE.asEuint8(priceBytes);
 
-        ExecutionResult[N_ORDERS] memory results;
         // baseToken.transferFromEncrypted(
         //     msg.sender,
         //     address(this),
@@ -82,10 +83,10 @@ contract OrderBook is ReentrancyGuard {
             //     qtyFilled.toU32()
             // );
 
-            results[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //TODO: instead of doing this you could just transfer the funds
+            lastPlaceOrderResult.fills[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //TODO: instead of doing this you could just transfer the funds
         }
 
-        return PlaceOrderResult(results, shiftBy);
+        lastPlaceOrderResult.shiftBy = shiftBy;
 
         // for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS; shiftIdx++) {
         //     ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);

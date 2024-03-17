@@ -3,7 +3,6 @@
 /* eslint-disable */
 import type {
   BaseContract,
-  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
@@ -24,47 +23,21 @@ export type InEuint8Struct = { data: BytesLike };
 
 export type InEuint8StructOutput = [data: string] & { data: string };
 
-export declare namespace OrderBook {
-  export type ExecutionResultStruct = {
-    orderId: BigNumberish;
-    quantity: BigNumberish;
-  };
-
-  export type ExecutionResultStructOutput = [
-    orderId: bigint,
-    quantity: bigint
-  ] & { orderId: bigint; quantity: bigint };
-
-  export type PlaceOrderResultStruct = {
-    fills: [OrderBook.ExecutionResultStruct, OrderBook.ExecutionResultStruct];
-    shiftBy: BigNumberish;
-  };
-
-  export type PlaceOrderResultStructOutput = [
-    fills: [
-      OrderBook.ExecutionResultStructOutput,
-      OrderBook.ExecutionResultStructOutput
-    ],
-    shiftBy: bigint
-  ] & {
-    fills: [
-      OrderBook.ExecutionResultStructOutput,
-      OrderBook.ExecutionResultStructOutput
-    ];
-    shiftBy: bigint;
-  };
-}
-
 export interface OrderBookInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "baseToken"
+      | "lastPlaceOrderResult"
       | "placeBuyOrder"
       | "shiftSellBook"
       | "tradeToken"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "lastPlaceOrderResult",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "placeBuyOrder",
     values: [InEuint8Struct, InEuint8Struct, InEuint8Struct]
@@ -79,6 +52,10 @@ export interface OrderBookInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "lastPlaceOrderResult",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "placeBuyOrder",
     data: BytesLike
@@ -135,13 +112,15 @@ export interface OrderBook extends BaseContract {
 
   baseToken: TypedContractMethod<[], [string], "view">;
 
+  lastPlaceOrderResult: TypedContractMethod<[], [bigint], "view">;
+
   placeBuyOrder: TypedContractMethod<
     [
       orderIdBytes: InEuint8Struct,
       priceBytes: InEuint8Struct,
       qtyBytes: InEuint8Struct
     ],
-    [OrderBook.PlaceOrderResultStructOutput],
+    [void],
     "nonpayable"
   >;
 
@@ -161,6 +140,9 @@ export interface OrderBook extends BaseContract {
     nameOrSignature: "baseToken"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "lastPlaceOrderResult"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "placeBuyOrder"
   ): TypedContractMethod<
     [
@@ -168,7 +150,7 @@ export interface OrderBook extends BaseContract {
       priceBytes: InEuint8Struct,
       qtyBytes: InEuint8Struct
     ],
-    [OrderBook.PlaceOrderResultStructOutput],
+    [void],
     "nonpayable"
   >;
   getFunction(
