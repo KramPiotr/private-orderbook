@@ -28,14 +28,20 @@ export interface OrderBookInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "baseToken"
+      | "insertBuyOrder"
       | "lastFills"
       | "lastShiftBy"
       | "placeBuyOrder"
+      | "qtyNotFilled"
       | "shiftSellBook"
       | "tradeToken"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "insertBuyOrder",
+    values: [InEuint8Struct, InEuint8Struct]
+  ): string;
   encodeFunctionData(
     functionFragment: "lastFills",
     values: [BigNumberish]
@@ -49,6 +55,10 @@ export interface OrderBookInterface extends Interface {
     values: [InEuint8Struct, InEuint8Struct, InEuint8Struct]
   ): string;
   encodeFunctionData(
+    functionFragment: "qtyNotFilled",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "shiftSellBook",
     values?: undefined
   ): string;
@@ -58,6 +68,10 @@ export interface OrderBookInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "insertBuyOrder",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "lastFills", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "lastShiftBy",
@@ -65,6 +79,10 @@ export interface OrderBookInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "placeBuyOrder",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "qtyNotFilled",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -119,6 +137,12 @@ export interface OrderBook extends BaseContract {
 
   baseToken: TypedContractMethod<[], [string], "view">;
 
+  insertBuyOrder: TypedContractMethod<
+    [orderIdBytes: InEuint8Struct, priceBytes: InEuint8Struct],
+    [void],
+    "nonpayable"
+  >;
+
   lastFills: TypedContractMethod<
     [arg0: BigNumberish],
     [[bigint, bigint] & { orderId: bigint; quantity: bigint }],
@@ -137,6 +161,8 @@ export interface OrderBook extends BaseContract {
     "nonpayable"
   >;
 
+  qtyNotFilled: TypedContractMethod<[], [bigint], "view">;
+
   shiftSellBook: TypedContractMethod<[], [void], "nonpayable">;
 
   tradeToken: TypedContractMethod<[], [string], "view">;
@@ -148,6 +174,13 @@ export interface OrderBook extends BaseContract {
   getFunction(
     nameOrSignature: "baseToken"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "insertBuyOrder"
+  ): TypedContractMethod<
+    [orderIdBytes: InEuint8Struct, priceBytes: InEuint8Struct],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "lastFills"
   ): TypedContractMethod<
@@ -169,6 +202,9 @@ export interface OrderBook extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "qtyNotFilled"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "shiftSellBook"
   ): TypedContractMethod<[], [void], "nonpayable">;

@@ -47,7 +47,7 @@ async function main() {
     const buyOrder = await orderBookContract.placeBuyOrder(encryptedOrderId, encryptedPrice, encryptedQty);
     await buyOrder.wait();
 
-    const doShift = await orderBookContract.shiftSellBook();
+    const doShift = await orderBookContract.shiftSellBook({gasLimit: 90_000_000});
     await doShift.wait();
 
     // const lastFills = await orderBookContract.lastFills();

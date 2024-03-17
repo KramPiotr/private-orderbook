@@ -19,6 +19,7 @@ contract OrderBook is ReentrancyGuard {
 
     ExecutionResult[N_ORDERS] public lastFills;//TODO: hack to prove that it's working, will be changed later
     euint8 public lastShiftBy;
+    euint8 public qtyNotFilled;
 
     euint8 internal CONST_0_ENCRYPTED;
     euint8 internal CONST_1_ENCRYPTED;
@@ -84,47 +85,7 @@ contract OrderBook is ReentrancyGuard {
 
         lastShiftBy = shiftBy;
 
-        // for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS; shiftIdx++) {
-        //     ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
-        //     shiftBy = FHE.select(doShift, shiftBy - CONST_1_ENCRYPTED, shiftBy);
-        //     euint8 lastPrice = CONST_0_ENCRYPTED;
-        //     euint8 lastQty = CONST_0_ENCRYPTED;
-        //     for (uint8 orderIdx = N_ORDERS - 1; orderIdx >= 0; orderIdx--) {
-        //         euint8 nextLastPrice = sellBook[orderIdx].price;
-        //         euint8 nextLastQty = sellBook[orderIdx].qty;
-
-        //         sellBook[orderIdx].price = FHE.select(doShift, lastPrice, nextLastPrice);
-        //         sellBook[orderIdx].qty = FHE.select(doShift, lastQty, nextLastQty);
-
-        //         lastPrice = nextLastPrice;
-        //         lastQty = nextLastQty;
-        //     }
-        // }
-
-        // ebool shift = FHE.asEbool(false);
-        // euint8 idCarriedOn = orderId;
-        // euint8 priceCarriedOn = price;
-        // euint8 qtyCarriedOn = qtyLeft;
-        // ebool doInsert = qtyLeft.gt(CONST_0_ENCRYPTED);
-        // euint8 prevPrice = CONST_0_ENCRYPTED;
-        // for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
-
-        //     ebool isCorrectPosition = FHE.and(FHE.eq(prevPrice, price), buyBook[orderIdx].price.gt(price));
-        //     shift = FHE.or(shift, FHE.and(doInsert, isCorrectPosition));
-        //     prevPrice = buyBook[orderIdx].price;
-
-        //     euint8 nextIdCarriedOn = FHE.select(shift, buyBook[orderIdx].id, idCarriedOn);
-        //     euint8 nextPriceCarriedOn = FHE.select(shift, buyBook[orderIdx].price, priceCarriedOn);
-        //     euint8 nextQtyCarriedOn = FHE.select(shift, buyBook[orderIdx].qty, qtyCarriedOn);
-
-        //     buyBook[orderIdx].id = FHE.select(shift, idCarriedOn, buyBook[orderIdx].id);
-        //     buyBook[orderIdx].price = FHE.select(shift, priceCarriedOn, buyBook[orderIdx].price);
-        //     buyBook[orderIdx].qty = FHE.select(shift, qtyCarriedOn, buyBook[orderIdx].qty);
-
-        //     idCarriedOn = nextIdCarriedOn;
-        //     priceCarriedOn = nextPriceCarriedOn;
-        //     qtyCarriedOn = nextQtyCarriedOn;
-        // }
+        qtyNotFilled = qtyLeft;
     }
 
     function shiftSellBook() external { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
@@ -145,6 +106,41 @@ contract OrderBook is ReentrancyGuard {
                 lastPrice = nextLastPrice;
                 lastQty = nextLastQty;
             }
+        }
+    }
+
+
+    function insertBuyOrder(
+        inEuint8 calldata orderIdBytes,
+        inEuint8 calldata priceBytes
+    ) external nonReentrant { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
+
+        euint8 orderId = FHE.asEuint8(orderIdBytes);
+        euint8 price = FHE.asEuint8(priceBytes);
+
+        ebool shift = FHE.asEbool(false);
+        euint8 idCarriedOn = orderId;
+        euint8 priceCarriedOn = price;
+        euint8 qtyCarriedOn = qtyNotFilled;
+        ebool doInsert = qtyNotFilled.gt(CONST_0_ENCRYPTED);
+        euint8 prevPrice = CONST_0_ENCRYPTED;
+        for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
+
+            ebool isCorrectPosition = FHE.and(FHE.eq(prevPrice, price), buyBook[orderIdx].price.gt(price));
+            shift = FHE.or(shift, FHE.and(doInsert, isCorrectPosition));
+            prevPrice = buyBook[orderIdx].price;
+
+            euint8 nextIdCarriedOn = FHE.select(shift, buyBook[orderIdx].id, idCarriedOn);
+            euint8 nextPriceCarriedOn = FHE.select(shift, buyBook[orderIdx].price, priceCarriedOn);
+            euint8 nextQtyCarriedOn = FHE.select(shift, buyBook[orderIdx].qty, qtyCarriedOn);
+
+            buyBook[orderIdx].id = FHE.select(shift, idCarriedOn, buyBook[orderIdx].id);
+            buyBook[orderIdx].price = FHE.select(shift, priceCarriedOn, buyBook[orderIdx].price);
+            buyBook[orderIdx].qty = FHE.select(shift, qtyCarriedOn, buyBook[orderIdx].qty);
+
+            idCarriedOn = nextIdCarriedOn;
+            priceCarriedOn = nextPriceCarriedOn;
+            qtyCarriedOn = nextQtyCarriedOn;
         }
     }
 

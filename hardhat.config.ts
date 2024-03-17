@@ -20,7 +20,6 @@ const testnetConfig = {
     url: TESTNET_RPC_URL,
     timeout: 100000,
     gas: 50_000_000,
-    gasPrice: 1,
 }
 
 
