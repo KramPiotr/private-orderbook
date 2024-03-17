@@ -66,8 +66,22 @@ const permit = await getPermit(orderBook.target, ethers.provider);
     // console.log("Encrypted price is " + JSON.stringify(encryptedPrice, null, 2));
     // console.log("Encrypted qty is " + JSON.stringify(encryptedQty, null, 2));
 
-    const buyOrder = await orderBook.placeBuyOrder(encryptedOrderId, encryptedPrice, encryptedQty);
+    const buyOrder = await orderBook.placeBuyOrder(encryptedPrice, encryptedQty);
     await buyOrder.wait();
+
+    console.log("Place buy order completed successfully!");
+
+    const permission = await fhenixjs.extractPermitPermission(permit);
+
+    const ebuyFillQty = await orderBook.getMostCompetitiveFillQty(permission);
+    const buyFillQty = fhenixjs.unseal(orderBook.target, ebuyFillQty);
+    console.log("Filled quantity with the most competitive sell " + String(buyFillQty));
+
+
+    const eQtyNotFilled = await orderBook.getQtyNotFilled(permission);
+    const qtyNotFilled = fhenixjs.unseal(orderBook.target, eQtyNotFilled);
+    console.log("Qty not filled " + String(qtyNotFilled));
+
 
     // const doShift = await orderBook.shiftSellBook({gasLimit: 90_000_000});
     // await doShift.wait();
@@ -75,7 +89,23 @@ const permit = await getPermit(orderBook.target, ethers.provider);
     const insertBuyOrder = await orderBook.insertBuyOrder(encryptedOrderId, encryptedPrice);
     await insertBuyOrder.wait();
 
-    // const lastFills = await orderBookContract.lastFills();
+    const eBuyQty = await orderBook.getMostCompetitiveBuyQty(permission);
+    const buyQty = fhenixjs.unseal(orderBook.target, eBuyQty);
+    console.log("Most competitive buy qty " + String(buyQty));
+
+    const sellOrder = await orderBook.placeSellOrder(encryptedPrice, encryptedQty);
+    await sellOrder.wait();
+
+    const eSellFillQty = await orderBook.getMostCompetitiveFillQty(permission);
+    const sellFillQty = fhenixjs.unseal(orderBook.target, eSellFillQty);
+    console.log("Filled quantity with the most competitive buy " + String(sellFillQty));
+
+    // const doShift = await orderBook.shiftBuyBook({gasLimit: 90_000_000});
+    // await doShift.wait();
+
+    const insertSellOrder = await orderBook.insertSellOrder(encryptedOrderId, encryptedPrice);
+    await insertSellOrder.wait();
+
     // const lastShiftBy = await orderBookContract.lastShiftBy();
 
     // const shiftByDecrypted = await fhenixjs.unseal(orderBookAddress, lastShiftBy.toString());

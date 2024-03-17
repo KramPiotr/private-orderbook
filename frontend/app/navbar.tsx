@@ -36,10 +36,10 @@ const Navbar = () => {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink
-              href={"/liquidity"}
+              href={"/fills"}
               className={navigationMenuTriggerStyle()}
             >
-              Liquidity
+              Fills
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem>

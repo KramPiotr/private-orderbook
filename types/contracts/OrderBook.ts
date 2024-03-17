@@ -20,6 +20,13 @@ import type {
   TypedContractMethod,
 } from "../common";
 
+export type PermissionStruct = { publicKey: BytesLike; signature: BytesLike };
+
+export type PermissionStructOutput = [publicKey: string, signature: string] & {
+  publicKey: string;
+  signature: string;
+};
+
 export type InEuint8Struct = { data: BytesLike };
 
 export type InEuint8StructOutput = [data: string] & { data: string };
@@ -28,18 +35,40 @@ export interface OrderBookInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "baseToken"
+      | "getMostCompetitiveBuyQty"
+      | "getMostCompetitiveFillQty"
+      | "getQtyNotFilled"
       | "insertBuyOrder"
+      | "insertSellOrder"
       | "lastFills"
       | "lastShiftBy"
       | "placeBuyOrder"
+      | "placeSellOrder"
       | "qtyNotFilled"
+      | "shiftBuyBook"
       | "shiftSellBook"
       | "tradeToken"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "getMostCompetitiveBuyQty",
+    values: [PermissionStruct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getMostCompetitiveFillQty",
+    values: [PermissionStruct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getQtyNotFilled",
+    values: [PermissionStruct]
+  ): string;
+  encodeFunctionData(
     functionFragment: "insertBuyOrder",
+    values: [InEuint8Struct, InEuint8Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "insertSellOrder",
     values: [InEuint8Struct, InEuint8Struct]
   ): string;
   encodeFunctionData(
@@ -52,10 +81,18 @@ export interface OrderBookInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "placeBuyOrder",
-    values: [InEuint8Struct, InEuint8Struct, InEuint8Struct]
+    values: [InEuint8Struct, InEuint8Struct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "placeSellOrder",
+    values: [InEuint8Struct, InEuint8Struct]
   ): string;
   encodeFunctionData(
     functionFragment: "qtyNotFilled",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "shiftBuyBook",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -69,7 +106,23 @@ export interface OrderBookInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "getMostCompetitiveBuyQty",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getMostCompetitiveFillQty",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getQtyNotFilled",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "insertBuyOrder",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "insertSellOrder",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "lastFills", data: BytesLike): Result;
@@ -82,7 +135,15 @@ export interface OrderBookInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "placeSellOrder",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "qtyNotFilled",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "shiftBuyBook",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -137,7 +198,31 @@ export interface OrderBook extends BaseContract {
 
   baseToken: TypedContractMethod<[], [string], "view">;
 
+  getMostCompetitiveBuyQty: TypedContractMethod<
+    [permission: PermissionStruct],
+    [string],
+    "view"
+  >;
+
+  getMostCompetitiveFillQty: TypedContractMethod<
+    [permission: PermissionStruct],
+    [string],
+    "view"
+  >;
+
+  getQtyNotFilled: TypedContractMethod<
+    [permission: PermissionStruct],
+    [string],
+    "view"
+  >;
+
   insertBuyOrder: TypedContractMethod<
+    [orderIdBytes: InEuint8Struct, priceBytes: InEuint8Struct],
+    [void],
+    "nonpayable"
+  >;
+
+  insertSellOrder: TypedContractMethod<
     [orderIdBytes: InEuint8Struct, priceBytes: InEuint8Struct],
     [void],
     "nonpayable"
@@ -152,16 +237,20 @@ export interface OrderBook extends BaseContract {
   lastShiftBy: TypedContractMethod<[], [bigint], "view">;
 
   placeBuyOrder: TypedContractMethod<
-    [
-      orderIdBytes: InEuint8Struct,
-      priceBytes: InEuint8Struct,
-      qtyBytes: InEuint8Struct
-    ],
+    [priceBytes: InEuint8Struct, qtyBytes: InEuint8Struct],
+    [void],
+    "nonpayable"
+  >;
+
+  placeSellOrder: TypedContractMethod<
+    [priceBytes: InEuint8Struct, qtyBytes: InEuint8Struct],
     [void],
     "nonpayable"
   >;
 
   qtyNotFilled: TypedContractMethod<[], [bigint], "view">;
+
+  shiftBuyBook: TypedContractMethod<[], [void], "nonpayable">;
 
   shiftSellBook: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -175,7 +264,23 @@ export interface OrderBook extends BaseContract {
     nameOrSignature: "baseToken"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "getMostCompetitiveBuyQty"
+  ): TypedContractMethod<[permission: PermissionStruct], [string], "view">;
+  getFunction(
+    nameOrSignature: "getMostCompetitiveFillQty"
+  ): TypedContractMethod<[permission: PermissionStruct], [string], "view">;
+  getFunction(
+    nameOrSignature: "getQtyNotFilled"
+  ): TypedContractMethod<[permission: PermissionStruct], [string], "view">;
+  getFunction(
     nameOrSignature: "insertBuyOrder"
+  ): TypedContractMethod<
+    [orderIdBytes: InEuint8Struct, priceBytes: InEuint8Struct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "insertSellOrder"
   ): TypedContractMethod<
     [orderIdBytes: InEuint8Struct, priceBytes: InEuint8Struct],
     [void],
@@ -194,17 +299,23 @@ export interface OrderBook extends BaseContract {
   getFunction(
     nameOrSignature: "placeBuyOrder"
   ): TypedContractMethod<
-    [
-      orderIdBytes: InEuint8Struct,
-      priceBytes: InEuint8Struct,
-      qtyBytes: InEuint8Struct
-    ],
+    [priceBytes: InEuint8Struct, qtyBytes: InEuint8Struct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "placeSellOrder"
+  ): TypedContractMethod<
+    [priceBytes: InEuint8Struct, qtyBytes: InEuint8Struct],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "qtyNotFilled"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "shiftBuyBook"
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "shiftSellBook"
   ): TypedContractMethod<[], [void], "nonpayable">;

@@ -41,13 +41,30 @@ contract OrderBook is ReentrancyGuard {
         CONST_1_ENCRYPTED = FHE.asEuint8(1);
     }
 
+    // function getLastFills(Permission calldata permission) public view virtual returns (bytes memory) {
+    //     return FHE.sealoutput(lastFills, permission.publicKey);
+    // }
+
+
+    function getMostCompetitiveFillQty(Permission calldata permission) public view virtual returns (bytes memory) {
+        return FHE.sealoutput(lastFills[0].quantity, permission.publicKey);
+    }
+
+    function getMostCompetitiveBuyQty(Permission calldata permission) public view virtual returns (bytes memory) {
+        return FHE.sealoutput(buyBook[0].qty, permission.publicKey);
+    }
+
+    function getQtyNotFilled(Permission calldata permission) public view virtual returns (bytes memory) {
+        return FHE.sealoutput(qtyNotFilled, permission.publicKey);
+    }
+
     function placeBuyOrder(
-        inEuint8 calldata orderIdBytes,
+        // inEuint8 calldata orderIdBytes,
         inEuint8 calldata priceBytes,
         inEuint8 calldata qtyBytes
     ) external nonReentrant {
         
-        euint8 orderId = FHE.asEuint8(orderIdBytes);
+        // euint8 orderId = FHE.asEuint8(orderIdBytes);
         euint8 qtyLeft = FHE.asEuint8(qtyBytes);
         euint8 price = FHE.asEuint8(priceBytes);
 
@@ -117,7 +134,7 @@ contract OrderBook is ReentrancyGuard {
         euint8 prevPrice = CONST_0_ENCRYPTED;
         for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
 
-            ebool isCorrectPosition = FHE.and(FHE.eq(prevPrice, price), buyBook[orderIdx].price.gt(price));
+            ebool isCorrectPosition = FHE.or(buyBook[orderIdx].price.eq(CONST_0_ENCRYPTED), FHE.and(price.gte(prevPrice), buyBook[orderIdx].price.gt(price)));
             shift = FHE.or(shift, FHE.and(doInsert, isCorrectPosition));
             prevPrice = buyBook[orderIdx].price;
 
@@ -136,12 +153,12 @@ contract OrderBook is ReentrancyGuard {
     }
 
     function placeSellOrder(
-        inEuint8 calldata orderIdBytes,
+        // inEuint8 calldata orderIdBytes,
         inEuint8 calldata priceBytes,
         inEuint8 calldata qtyBytes
     ) external nonReentrant {
         
-        euint8 orderId = FHE.asEuint8(orderIdBytes);
+        // euint8 orderId = FHE.asEuint8(orderIdBytes);
         euint8 qtyLeft = FHE.asEuint8(qtyBytes);
         euint8 price = FHE.asEuint8(priceBytes);
 
@@ -211,7 +228,7 @@ contract OrderBook is ReentrancyGuard {
         euint8 prevPrice = CONST_0_ENCRYPTED;
         for (uint8 orderIdx = 0; orderIdx < N_ORDERS; orderIdx++) {
 
-            ebool isCorrectPosition = FHE.and(FHE.eq(prevPrice, price), sellBook[orderIdx].price.lt(price));
+            ebool isCorrectPosition = FHE.and(price.lte(prevPrice), sellBook[orderIdx].price.lt(price));
             shift = FHE.or(shift, FHE.and(doInsert, isCorrectPosition));
             prevPrice = sellBook[orderIdx].price;
 
