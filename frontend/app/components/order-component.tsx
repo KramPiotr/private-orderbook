@@ -16,10 +16,59 @@ import { TokenSelector } from "./token-selector";
 import { tokens } from "@/lib/tokens";
 import { useState } from "react";
 import { Button } from "@chakra-ui/react";
+import { FhenixClient } from "fhenixjs";
+import { ethers } from "ethers";
+import { useEthersSigner } from "@/lib/ethers";
+import { orderbookABI } from "@/abi/orderbookABI";
+
+const ORDERBOOK_ADDRESS = "0xB98a8E70ab73b1c6A430B05E0f60581897bC51aF";
+const A_TOKEN_ADDRESS = "0x0E13Ca21Fba16D8B4C11D5330f4aA65d9d614187";
+const B_TOKEN_ADDRESS = "0xba8507bFcA9Fe62A5369c74d8f71fb2c9f5d484b";
 
 export function OrderComponent() {
   const [baseToken, setBaseToken] = useState<any>(tokens[0]);
   const [tradeToken, setTradeToken] = useState<any>(tokens[1]);
+  const [price, setPrice] = useState<string>('0');
+  const [qty, setQty] = useState<string>('0');
+
+  async function buy() {
+    const numPrice = Math.round(Number(price)); //In the future multiply by 10^x and then round, currently price and qty need to be uint8 because of computational complexity
+    const numQty = Math.round(Number(qty));
+
+    if (numPrice == 0 || numQty == 0) {
+      console.error("Price or qty are invalid");
+      return;
+    }
+
+    console.log("Price is " + numPrice);
+    console.log("Qty is " + numQty);
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const fhenix = new FhenixClient({ provider });
+    const signer: any = useEthersSigner();
+
+    const encryptedPrice = await fhenix.encrypt_uint8(numPrice);
+    const encryptedQty = await fhenix.encrypt_uint8(numQty);
+
+    console.log("Encrypted price is " + JSON.stringify(encryptedPrice, null, 2));
+    console.log("Encrypted qty is " + JSON.stringify(encryptedQty, null, 2));
+
+    const OrderBookContract = {
+      contract: new ethers.Contract(
+        ORDERBOOK_ADDRESS,
+        orderbookABI,
+        signer as any
+      ),
+      address: ORDERBOOK_ADDRESS
+    };
+
+    const buyOrder = await OrderBookContract.contract.placeBuyOrder(encryptedPrice, encryptedQty);
+    buyOrder.wait();
+  }
+
+  async function sell() {
+    console.log("inside sell");
+  }
   return (
     <div>
       <div>
@@ -37,7 +86,7 @@ export function OrderComponent() {
                     Order Form
                   </h2>
                   <p className="text-sm leading-none text-gray-500 dark:text-gray-400">
-                    Buy and sell assets on the market
+                    Buy and sell assets privately
                   </p>
                 </div>
               </div>
@@ -80,11 +129,11 @@ export function OrderComponent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantity</Label>
-                  <Input id="quantity" placeholder="0.0000" />
+                  <Input id="quantity" value={price} onChange={(e) => toNumber(e, setPrice)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="price">Price</Label>
-                  <Input id="price" placeholder="0.0000" />
+                  <Input id="price" value={qty} onChange={(e) => toNumber(e, setQty)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="order-type">Order Type</Label>
@@ -147,6 +196,7 @@ export function OrderComponent() {
                   bg="green.700"
                   color="white"
                   width="200px"
+                  onClick={buy}
                 >
                   Buy
                 </Button>
@@ -161,7 +211,7 @@ export function OrderComponent() {
                   bg="red.600"
                   color="white"
                   width="200px"
-                  // bg={`#${Math.floor(Math.random() * 16777215).toString(16)}`} // Random background color
+                  onClick={sell}
                 >
                   Sell
                 </Button>
@@ -172,6 +222,14 @@ export function OrderComponent() {
       </div>
     </div>
   );
+}
+
+function toNumber(e: any, setVal: any) {
+  const stringVal = e.target.value;
+  let numberVal = Number(stringVal);
+  if (!isNaN(numberVal) && numberVal >= 0) {
+    setVal(stringVal);
+  }
 }
 
 function ChevronRightIcon(props) {
