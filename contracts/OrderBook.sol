@@ -17,7 +17,8 @@ contract OrderBook is ReentrancyGuard {
     Order[N_ORDERS] buyBook;
     Order[N_ORDERS] sellBook;
 
-    PlaceOrderResult public lastPlaceOrderResult; //TODO: hack to prove that it's working, will be changed later
+    ExecutionResult[N_ORDERS] public lastFills;//TODO: hack to prove that it's working, will be changed later
+    euint8 public lastShiftBy;
 
     euint8 internal CONST_0_ENCRYPTED;
     euint8 internal CONST_1_ENCRYPTED;
@@ -30,11 +31,6 @@ contract OrderBook is ReentrancyGuard {
     struct ExecutionResult {
         euint8 orderId;
         euint8 quantity;
-    }
-
-    struct PlaceOrderResult {
-        ExecutionResult[N_ORDERS] fills;
-        euint8 shiftBy;
     }
 
     /**
@@ -83,10 +79,10 @@ contract OrderBook is ReentrancyGuard {
             //     qtyFilled.toU32()
             // );
 
-            lastPlaceOrderResult.fills[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //TODO: instead of doing this you could just transfer the funds
+            lastFills[orderIdx] = ExecutionResult(sellBook[orderIdx].id, qtyFilled); //TODO: instead of doing this you could just transfer the funds
         }
 
-        lastPlaceOrderResult.shiftBy = shiftBy;
+        lastShiftBy = shiftBy;
 
         // for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS; shiftIdx++) {
         //     ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
@@ -131,12 +127,10 @@ contract OrderBook is ReentrancyGuard {
         // }
     }
 
-    function shiftSellBook(
-        inEuint8 calldata shiftByBytes
-    ) external { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
+    function shiftSellBook() external { //TODO: we need to make sure that there is a function to check whether your order is still in the order book
 
-        euint8 shiftBy = FHE.asEuint8(shiftByBytes);
-        for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS; shiftIdx++) {
+        euint8 shiftBy = lastShiftBy;
+        for (uint8 shiftIdx = 0; shiftIdx < N_ORDERS - 1; shiftIdx++) {
             ebool doShift = shiftBy.gt(CONST_0_ENCRYPTED);
             shiftBy = FHE.select(doShift, shiftBy - CONST_1_ENCRYPTED, shiftBy);
             euint8 lastPrice = CONST_0_ENCRYPTED;

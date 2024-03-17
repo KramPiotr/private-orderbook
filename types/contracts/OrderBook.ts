@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
@@ -27,7 +28,8 @@ export interface OrderBookInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "baseToken"
-      | "lastPlaceOrderResult"
+      | "lastFills"
+      | "lastShiftBy"
       | "placeBuyOrder"
       | "shiftSellBook"
       | "tradeToken"
@@ -35,7 +37,11 @@ export interface OrderBookInterface extends Interface {
 
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "lastPlaceOrderResult",
+    functionFragment: "lastFills",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "lastShiftBy",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -44,7 +50,7 @@ export interface OrderBookInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "shiftSellBook",
-    values: [InEuint8Struct]
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "tradeToken",
@@ -52,8 +58,9 @@ export interface OrderBookInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "lastFills", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "lastPlaceOrderResult",
+    functionFragment: "lastShiftBy",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -112,7 +119,13 @@ export interface OrderBook extends BaseContract {
 
   baseToken: TypedContractMethod<[], [string], "view">;
 
-  lastPlaceOrderResult: TypedContractMethod<[], [bigint], "view">;
+  lastFills: TypedContractMethod<
+    [arg0: BigNumberish],
+    [[bigint, bigint] & { orderId: bigint; quantity: bigint }],
+    "view"
+  >;
+
+  lastShiftBy: TypedContractMethod<[], [bigint], "view">;
 
   placeBuyOrder: TypedContractMethod<
     [
@@ -124,11 +137,7 @@ export interface OrderBook extends BaseContract {
     "nonpayable"
   >;
 
-  shiftSellBook: TypedContractMethod<
-    [shiftByBytes: InEuint8Struct],
-    [void],
-    "nonpayable"
-  >;
+  shiftSellBook: TypedContractMethod<[], [void], "nonpayable">;
 
   tradeToken: TypedContractMethod<[], [string], "view">;
 
@@ -140,7 +149,14 @@ export interface OrderBook extends BaseContract {
     nameOrSignature: "baseToken"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "lastPlaceOrderResult"
+    nameOrSignature: "lastFills"
+  ): TypedContractMethod<
+    [arg0: BigNumberish],
+    [[bigint, bigint] & { orderId: bigint; quantity: bigint }],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "lastShiftBy"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "placeBuyOrder"
@@ -155,7 +171,7 @@ export interface OrderBook extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "shiftSellBook"
-  ): TypedContractMethod<[shiftByBytes: InEuint8Struct], [void], "nonpayable">;
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "tradeToken"
   ): TypedContractMethod<[], [string], "view">;

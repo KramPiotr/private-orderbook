@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { OrderBook, OrderBook__factory } from "../types";
 import * as dotenv from "dotenv";
+import { getPermit } from "fhenixjs";
 dotenv.config();
 
 async function main() {
@@ -29,6 +30,9 @@ async function main() {
     orderBookAddress
   )) as OrderBook;
 
+  const permit = await getPermit(orderBookAddress, ethers.provider);
+  fhenixjs.storePermit(permit); 
+
   const orderId = 1;
   const price = 3;
   const qty = 4;
@@ -43,10 +47,15 @@ async function main() {
     const buyOrder = await orderBookContract.placeBuyOrder(encryptedOrderId, encryptedPrice, encryptedQty);
     await buyOrder.wait();
 
-    const buyOrderResults = await orderBookContract.lastPlaceOrderResult();
+    const doShift = await orderBookContract.shiftSellBook();
+    await doShift.wait();
 
-    console.log(JSON.stringify(buyOrderResults, null, 2));
+    // const lastFills = await orderBookContract.lastFills();
+    // const lastShiftBy = await orderBookContract.lastShiftBy();
 
+    // const shiftByDecrypted = await fhenixjs.unseal(orderBookAddress, lastShiftBy.toString());
+
+    // console.log(shiftByDecrypted);
     // console.log(JSON.stringify(buyOrder, null, 2));
     console.log("Placed order successfully!");
 

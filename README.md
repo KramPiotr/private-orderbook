@@ -67,7 +67,7 @@ This has the following advantage:
 - by keeping the array sorted and performing an encrypted bubble sort every time we see an order, we can guarantee O(n) time complexity for order insertion, done in a fully private way
 
 The challenge I stumbled across with this approach:
-- when filling opposite side orders, if you want to avoid the situation in which empty (fully filled) orders are left in your fixed length array, you need to implement the operation of shifting an array by k elements. There is a way to do that in O(n) time complexity, however, this would require decrypting an encrypted variable outside of a view function, which we established earlier leaks information and is unstable (in the future decrypt could be subject to network issues etc.). That's why I decided to follow the O(n^2) approach in which I shift by 1 element k times but iterate over the array n times in order to obfuscate k.
+- when filling opposite side orders, if you want to avoid the situation in which empty (fully filled) orders are left in your fixed length array, you need to implement the operation of shifting an array by k elements. There is a way to do that in O(n) time complexity, however, this would require decrypting an encrypted variable outside of a view function, which we established earlier leaks information and is unstable (in the future decrypt could be subject to network issues etc.). That's why I decided to follow the O(n^2) approach in which I shift by 1 element k times but iterate over the array n - 1 times in order to obfuscate k.
 
 ### Future direction
 
