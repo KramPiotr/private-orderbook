@@ -90,10 +90,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IFHERC20__factory>;
     getContractFactory(
-      name: "IOrderBook",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IOrderBook__factory>;
-    getContractFactory(
       name: "OrderBook",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OrderBook__factory>;
@@ -194,11 +190,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IFHERC20>;
     getContractAt(
-      name: "IOrderBook",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IOrderBook>;
-    getContractAt(
       name: "OrderBook",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -280,10 +271,6 @@ declare module "hardhat/types/runtime" {
       name: "IFHERC20",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IFHERC20>;
-    deployContract(
-      name: "IOrderBook",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IOrderBook>;
     deployContract(
       name: "OrderBook",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -384,11 +371,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IFHERC20>;
-    deployContract(
-      name: "IOrderBook",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IOrderBook>;
     deployContract(
       name: "OrderBook",
       args: any[],

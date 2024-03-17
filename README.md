@@ -93,5 +93,8 @@ Steps to run locally:
 - `pnpm install`
 - `pnpm run localfhenix:start`
 
+To test the contract after modifying OrderBook.sol:
+- `pnpm localfhenix:stop && pnpm localfhenix:start && pnpm hardhat run scripts/DeployLocal.ts && pnpm hardhat run scripts/MintToken.ts && pnpm hardhat run scripts/PlaceOrder.ts`
+
 
 

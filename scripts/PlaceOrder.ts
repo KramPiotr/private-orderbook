@@ -29,16 +29,22 @@ async function main() {
     orderBookAddress
   )) as OrderBook;
 
+  const orderId = 1;
   const price = 3;
   const qty = 4;
 
+  const encryptedOrderId = await fhenixjs.encrypt_uint8(orderId);
   const encryptedPrice = await fhenixjs.encrypt_uint8(price);
   const encryptedQty = await fhenixjs.encrypt_uint8(qty);
 
     // console.log("Encrypted price is " + JSON.stringify(encryptedPrice, null, 2));
     // console.log("Encrypted qty is " + JSON.stringify(encryptedQty, null, 2));
 
-    const tx = await orderBookContract.placeBuyOrder(encryptedPrice, encryptedQty);
+    const buyOrder = await orderBookContract.placeBuyOrder(encryptedOrderId, encryptedPrice, encryptedQty);
+    await buyOrder.wait();
+
+    console.log(JSON.stringify(buyOrder, null, 2));
+
 }
 
 main().catch((error) => {

@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
@@ -23,6 +24,18 @@ export type InEuint8Struct = { data: BytesLike };
 
 export type InEuint8StructOutput = [data: string] & { data: string };
 
+export declare namespace OrderBook {
+  export type ExecutionResultStruct = {
+    orderId: BigNumberish;
+    quantity: BigNumberish;
+  };
+
+  export type ExecutionResultStructOutput = [
+    orderId: bigint,
+    quantity: bigint
+  ] & { orderId: bigint; quantity: bigint };
+}
+
 export interface OrderBookInterface extends Interface {
   getFunction(
     nameOrSignature: "baseToken" | "placeBuyOrder" | "tradeToken"
@@ -31,7 +44,7 @@ export interface OrderBookInterface extends Interface {
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "placeBuyOrder",
-    values: [InEuint8Struct, InEuint8Struct]
+    values: [InEuint8Struct, InEuint8Struct, InEuint8Struct]
   ): string;
   encodeFunctionData(
     functionFragment: "tradeToken",
@@ -92,8 +105,17 @@ export interface OrderBook extends BaseContract {
   baseToken: TypedContractMethod<[], [string], "view">;
 
   placeBuyOrder: TypedContractMethod<
-    [priceBytes: InEuint8Struct, qtyBytes: InEuint8Struct],
-    [void],
+    [
+      orderIdBytes: InEuint8Struct,
+      priceBytes: InEuint8Struct,
+      qtyBytes: InEuint8Struct
+    ],
+    [
+      [
+        OrderBook.ExecutionResultStructOutput,
+        OrderBook.ExecutionResultStructOutput
+      ]
+    ],
     "nonpayable"
   >;
 
@@ -109,8 +131,17 @@ export interface OrderBook extends BaseContract {
   getFunction(
     nameOrSignature: "placeBuyOrder"
   ): TypedContractMethod<
-    [priceBytes: InEuint8Struct, qtyBytes: InEuint8Struct],
-    [void],
+    [
+      orderIdBytes: InEuint8Struct,
+      priceBytes: InEuint8Struct,
+      qtyBytes: InEuint8Struct
+    ],
+    [
+      [
+        OrderBook.ExecutionResultStructOutput,
+        OrderBook.ExecutionResultStructOutput
+      ]
+    ],
     "nonpayable"
   >;
   getFunction(

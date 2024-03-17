@@ -46,7 +46,5 @@ export type { FHERC20 } from "./contracts/FHERC20";
 export { FHERC20__factory } from "./factories/contracts/FHERC20__factory";
 export type { IFHERC20 } from "./contracts/IFHERC20";
 export { IFHERC20__factory } from "./factories/contracts/IFHERC20__factory";
-export type { IOrderBook } from "./contracts/interfaces/IOrderBook";
-export { IOrderBook__factory } from "./factories/contracts/interfaces/IOrderBook__factory";
 export type { OrderBook } from "./contracts/OrderBook";
 export { OrderBook__factory } from "./factories/contracts/OrderBook__factory";
