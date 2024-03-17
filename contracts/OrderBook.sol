@@ -50,6 +50,11 @@ contract OrderBook is ReentrancyGuard {
         return FHE.sealoutput(lastFills[0].quantity, permission.publicKey);
     }
 
+    function getMostCompetitiveFillOrderId(Permission calldata permission) public view virtual returns (bytes memory) {
+        return FHE.sealoutput(lastFills[0].orderId, permission.publicKey);
+    }
+
+
     function getMostCompetitiveBuyQty(Permission calldata permission) public view virtual returns (bytes memory) {
         return FHE.sealoutput(buyBook[0].qty, permission.publicKey);
     }

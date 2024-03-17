@@ -21,10 +21,7 @@ import { ethers } from "ethers";
 import { useEthersSigner } from "@/lib/ethers";
 import { orderbookABI } from "@/abi/orderbookABI";
 
-const ORDERBOOK_ADDRESS = "0xAf17c42d8a3A8aC4a1743B047655BA2fffb9A1a9";
-const A_TOKEN_ADDRESS = "0x731f33D92812FD38a1Fbe38Bcf73fd87129d5087";
-const B_TOKEN_ADDRESS = "0xbDdA27903B576F424E22D6c72E222F673a32b439";
-
+const ORDERBOOK_ADDRESS = "0xa0F69bFA296A2eb65cF4fCC0cABfb265C0c8051a";
 
 export function OrderComponent() {
   const [baseToken, setBaseToken] = useState<any>(tokens[0]);

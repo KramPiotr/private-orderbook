@@ -36,6 +36,7 @@ export interface OrderBookInterface extends Interface {
     nameOrSignature:
       | "baseToken"
       | "getMostCompetitiveBuyQty"
+      | "getMostCompetitiveFillOrderId"
       | "getMostCompetitiveFillQty"
       | "getQtyNotFilled"
       | "insertBuyOrder"
@@ -53,6 +54,10 @@ export interface OrderBookInterface extends Interface {
   encodeFunctionData(functionFragment: "baseToken", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getMostCompetitiveBuyQty",
+    values: [PermissionStruct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getMostCompetitiveFillOrderId",
     values: [PermissionStruct]
   ): string;
   encodeFunctionData(
@@ -107,6 +112,10 @@ export interface OrderBookInterface extends Interface {
   decodeFunctionResult(functionFragment: "baseToken", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getMostCompetitiveBuyQty",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getMostCompetitiveFillOrderId",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -204,6 +213,12 @@ export interface OrderBook extends BaseContract {
     "view"
   >;
 
+  getMostCompetitiveFillOrderId: TypedContractMethod<
+    [permission: PermissionStruct],
+    [string],
+    "view"
+  >;
+
   getMostCompetitiveFillQty: TypedContractMethod<
     [permission: PermissionStruct],
     [string],
@@ -265,6 +280,9 @@ export interface OrderBook extends BaseContract {
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "getMostCompetitiveBuyQty"
+  ): TypedContractMethod<[permission: PermissionStruct], [string], "view">;
+  getFunction(
+    nameOrSignature: "getMostCompetitiveFillOrderId"
   ): TypedContractMethod<[permission: PermissionStruct], [string], "view">;
   getFunction(
     nameOrSignature: "getMostCompetitiveFillQty"
